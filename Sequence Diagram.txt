@@ -1,0 +1,57 @@
+title Pengajuan Pinjaman via Mobile App
+autoNumber nested
+
+User (Mobile App) [icon: smartphone, color: blue]
+API Gateway [icon: cloud, color: green]
+Loan Service [icon: server, color: orange]
+Database [icon: database, color: orange]
+"Third-Party Credit Scoring Service" [icon: globe, color: purple]
+Notification Service [icon: bell, color: teal]
+Email Gateway [icon: mail, color: teal]
+SMS Gateway [icon: message-circle, color: teal]
+
+// 1. User applies for a loan
+User (Mobile App) > API Gateway: Kirim request POST /loans/apply
+
+// 2. API Gateway validates token and forwards request
+API Gateway > API Gateway: Validasi token autentikasi
+alt [label: token valid, icon: check] {
+  API Gateway > Loan Service: Teruskan permintaan pengajuan pinjaman
+}
+else [label: token tidak valid, icon: x] {
+  API Gateway --> User (Mobile App): Response error 401 (Unauthorized)
+}
+
+// 3. Loan Service business validation
+Loan Service > Database: Cek pinjaman aktif/pending untuk user_id
+alt [label: Ada pinjaman aktif/pending, icon: alert-triangle] {
+  Loan Service --> API Gateway: Response error 409 (Conflict)
+  API Gateway --> User (Mobile App): Tampilkan pesan: "Pengajuan ditolak, masih ada pinjaman aktif/pending"
+}
+else [label: Tidak ada pinjaman aktif/pending, icon: check] {
+  // 4. Create new loan application
+  Loan Service > Database: Buat entri baru di loan_applications (status: pending)
+  Loan Service --> API Gateway: Response sukses 201 (Created)
+  API Gateway --> User (Mobile App): Tampilkan pesan: "Pengajuan diterima, sedang diproses"
+  
+  // 6. Asynchronous credit scoring
+  par [label: Proses credit scoring async, icon: clock] {
+    Loan Service > "Third-Party Credit Scoring Service": Kirim data untuk credit scoring
+    "Third-Party Credit Scoring Service" --> Loan Service: Hasil credit scoring (misal: approved)
+    
+    alt [label: Hasil approved, icon: check] {
+      Loan Service > Database: Update status loan_applications menjadi approved
+      Loan Service > Database: Buat entri baru di loans dan installments
+    }
+    else [label: Hasil ditolak, icon: x] {
+      Loan Service > Database: Update status loan_applications menjadi rejected
+    }
+    
+    // 8. Notify user
+    Loan Service > Notification Service: Kirim permintaan notifikasi ke user
+    par [label: Notifikasi paralel, icon: send] {
+      Notification Service > Email Gateway: Kirim email notifikasi ke user
+      Notification Service > SMS Gateway: Kirim SMS notifikasi ke user
+    }
+  }
+}

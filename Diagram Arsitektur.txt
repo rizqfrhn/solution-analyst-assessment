@@ -1,0 +1,44 @@
+title Mobile Loan Application High-Level Architecture
+
+// Client
+Mobile Application [icon: smartphone, label: "Mobile App (React Native/Flutter)"]
+
+// API Gateway
+API Gateway [icon: aws-api-gateway, label: "API Gateway"]
+
+// Backend Microservices
+Backend Services [icon: server, color: blue] {
+  Auth Service [icon: lock, label: "Auth Service"]
+  User Service [icon: user, label: "User Service"]
+  Loan Service [icon: credit-card, label: "Loan Service"]
+  Notification Service [icon: bell, label: "Notification Service"]
+}
+
+// Databases
+Databases [icon: database, color: green] {
+  PostgreSQL [icon: postgresql, label: "PostgreSQL (Encrypted at Rest)"]
+}
+
+// Third-Party Services
+"Third-Party Services" [icon: cloud, color: orange] {
+  Cloud Storage [icon: aws-s3, label: "Cloud Storage (AWS S3/GCP)"]
+  Email & SMS Gateway [icon: send, label: "Email & SMS Gateway (SendGrid/Twilio)"]
+}
+
+// Connections
+Mobile Application > API Gateway: HTTPS (Encrypted in Transit)
+API Gateway > Auth Service: route/authenticate
+API Gateway > User Service: route
+API Gateway > Loan Service: route
+
+// Microservices to Databases
+Auth Service <> PostgreSQL
+User Service <> PostgreSQL
+Loan Service <> PostgreSQL
+Notification Service <> Loan Service
+
+// Microservices to Third-Party Services
+User Service > Cloud Storage: upload documents
+Notification Service > Email & SMS Gateway: send notifications
+
+// Security notes (as connection labels)

@@ -1,0 +1,40 @@
+Table users {
+  user_id varchar [pk]
+  name varchar
+  email varchar [unique, not null]
+  phone varchar [unique]
+  password varchar
+  ktp_image_url varchar
+  selfie_image_url varchar
+  status varchar // active, inactive, suspended
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table loan_applications {
+  application_id varchar [pk]
+  user_id varchar [not null, ref: > users.user_id] // one-to-many
+  amount_requested double
+  tenor_months int
+  status varchar // pending, approved, rejected
+  created_at timestamp [default: `CURRENT_TIMESTAMP`]
+}
+
+Table loans {
+  loan_id varchar [pk]
+  user_id varchar [not null] // redundant but useful
+  application_id varchar [unique, not null, ref: > loan_applications.application_id] // one-to-one
+  principal_amount double
+  interest_rate int // percentage (e.g. 12 = 12%)
+  status varchar // active, closed, defaulted
+  disbursement_date timestamp
+}
+
+Table installments {
+  installment_id varchar [pk]
+  loan_id varchar [not null, ref: > loans.loan_id] // one-to-many
+  due_date timestamp
+  amount_due double
+  amount_paid double
+  status varchar // pending, paid, overdue
+  payment_date timestamp
+}
